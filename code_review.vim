@@ -93,31 +93,28 @@ def comment_on_thing_under_cursor():
      if not thing_under_cursor:
           return
      if hasattr(thing_under_cursor, 'reply'):
-          vim.command('sp')
-          vim.command('enew')
-          b = vim.current.buffer
-          b.options['bufhidden'] = 'delete'
-          #b.options['swapfile'] = 0
-          vim.command('set filetype=codereviewcomment')
-          test_client.pr._send_comment = thing_under_cursor.reply
+          open_comment_buffer(thing_under_cursor.reply)
+     elif hasattr(thing_under_cursor, 'destination'):
+          file_under_cursor = find_file_under_cursor()
+          if not file_under_cursor:
+               return
+          def comment_on_file_line(text):
+               anchor = {'line' : thing_under_cursor.destination, 'lineType' : 'CONTEXT'}
+               test_client.pr.comment(text, path=file_under_cursor, anchor=anchor)
+          open_comment_buffer(comment_on_file_line)
 
 def edit_thing_under_cursor():
      thing_under_cursor = code_review.line_to_obj.get(vim.current.window.cursor[0]-1,None)
      if not thing_under_cursor:
           return
      if hasattr(thing_under_cursor, 'edit'):
-          vim.command('sp')
-          vim.command('enew')
-          b = vim.current.buffer
-          b.options['bufhidden'] = 'delete'
-          vim.command('set filetype=codereviewcomment')
+          b = open_comment_buffer(thing_under_cursor.edit)
           lines = thing_under_cursor.text.split('\n')
           b[0] = lines[0]
           if len(lines) > 1:
                for line in lines[1:]:
                     b.append(line)
           test_client.pr._active_comment = thing_under_cursor
-          test_client.pr._send_comment = thing_under_cursor.edit
 
 def delete_thing_under_cursor():
      thing_under_cursor = code_review.line_to_obj.get(vim.current.window.cursor[0]-1,None)
@@ -202,19 +199,23 @@ def find_file_under_cursor():
 
      return None
 
-def comment_on_file_under_cursor():
-     file_under_cursor = find_file_under_cursor()
-     if not file_under_cursor:
-          return
+def open_comment_buffer(send_comment):
      vim.command('sp')
      vim.command('enew')
      b = vim.current.buffer
      b.options['bufhidden'] = 'delete'
      #b.options['swapfile'] = 0
      vim.command('set filetype=codereviewcomment')
+     test_client.pr._send_comment = send_comment
+     return b
+
+def comment_on_file_under_cursor():
+     file_under_cursor = find_file_under_cursor()
+     if not file_under_cursor:
+          return
      def comment_on_file(text):
           test_client.pr.comment(text, path=file_under_cursor)
-     test_client.pr._send_comment = comment_on_file
+     open_comment_buffer(comment_on_file)
 
 EOF
 python view_dashboard()
