@@ -1,7 +1,7 @@
 let g:plugin_path = expand('<sfile>:p:h')
 
-autocmd Filetype codereview syn match diffAdded "|[0-9 ]\+| +.*"
-autocmd Filetype codereview syn match diffRemoved "|[0-9 ]\+| -.*"
+autocmd Filetype codereview,codereviewhunk syn match diffAdded "|[0-9 ]\+| +.*"
+autocmd Filetype codereview,codereviewhunk syn match diffRemoved "|[0-9 ]\+| -.*"
 autocmd Filetype codereviewpullrequests syn match diffAdded "(+)[^,]*"
 autocmd Filetype codereviewpullrequests syn match diffChange "(\\)[^,]*"
 
@@ -10,14 +10,20 @@ autocmd Filetype codereviewpullrequests nnoremap <silent> <buffer> j :python sel
 autocmd Filetype codereviewpullrequests nnoremap <silent> <buffer> k :python select_prev_pull_request()<CR>
 autocmd Filetype codereviewcomment nnoremap <silent> <buffer> <CR> :python send_comment()<CR>
 autocmd Filetype codereviewsidebar nnoremap <silent> <buffer> <CR> :python select_file()<CR>
-autocmd Filetype codereview nnoremap <silent> <buffer> s :python open_file_selector(test_client.pr.diff.keys())<CR>
-autocmd Filetype codereview nnoremap <silent> <buffer> <S-C> :python comment_on_thing_under_cursor()<CR>
-autocmd Filetype codereview nnoremap <silent> <buffer> <S-E> :python edit_thing_under_cursor()<CR>
-autocmd Filetype codereview nnoremap <silent> <buffer> <S-D> :python delete_thing_under_cursor()<CR>
-autocmd Filetype codereview nnoremap <silent> <buffer> <S-V> :python view_dashboard()<CR>
-autocmd Filetype codereview nnoremap <silent> <buffer> <S-M> :python comment_on_file_under_cursor()<CR>
+autocmd Filetype codereview,codereviewhunk nnoremap <silent> <buffer> s :python open_file_selector(test_client.pr.diff.keys())<CR>
+autocmd Filetype codereview,codereviewhunk nnoremap <silent> <buffer> <S-C> :python comment_on_thing_under_cursor()<CR>
+autocmd Filetype codereview,codereviewhunk nnoremap <silent> <buffer> <S-E> :python edit_thing_under_cursor()<CR>
+autocmd Filetype codereview,codereviewhunk nnoremap <silent> <buffer> <S-D> :python delete_thing_under_cursor()<CR>
+autocmd Filetype codereview,codereviewhunk nnoremap <silent> <buffer> <S-V> :python view_dashboard()<CR>
+autocmd Filetype codereview,codereviewhunk nnoremap <silent> <buffer> <S-M> :python comment_on_file_under_cursor()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> j :python next_hunk()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> k :python prev_hunk()<CR>
+
+autocmd Filetype codereview nnoremap <silent> <buffer> <CR> :set filetype=codereviewhunk<CR>
+
+autocmd Filetype codereviewhunk nnoremap <silent> <buffer> j gj
+autocmd Filetype codereviewhunk nnoremap <silent> <buffer> k gk
+autocmd Filetype codereviewhunk nnoremap <silent> <buffer> <Esc> :set filetype=codereview<CR>
 
 python << EOF
 import vim
