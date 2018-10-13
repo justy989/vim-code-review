@@ -4,6 +4,7 @@ import textwrap
 bar = '-' * 100
 
 line_to_obj = {}
+file_lines = []
 
 def append_line(appendable, line, obj):
     global line_to_obj
@@ -22,10 +23,13 @@ def print_comment(comment, appendable, indent=0):
 
 def get_file_lines(pr, appendable):
     global line_to_obj
+    global file_lines
     line_to_obj = {}
+    file_lines = []
     appendable[0] = bar
     for filename in sorted(pr.diff.keys()):
         diff = pr.diff[filename]
+        file_lines.append((len(appendable)-1,filename))
         appendable.append(filename)
         appendable.append(bar)
 

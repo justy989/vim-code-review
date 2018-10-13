@@ -13,6 +13,7 @@ autocmd Filetype codereview nnoremap <silent> <buffer> <S-C> :python comment_on_
 autocmd Filetype codereview nnoremap <silent> <buffer> <S-E> :python edit_thing_under_cursor()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> <S-D> :python delete_thing_under_cursor()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> <S-V> :python view_dashboard()<CR>
+autocmd Filetype codereview nnoremap <silent> <buffer> <S-M> :python comment_on_file_under_cursor()<CR>
 
 python << EOF
 import vim
@@ -98,7 +99,6 @@ def comment_on_thing_under_cursor():
           b.options['bufhidden'] = 'delete'
           #b.options['swapfile'] = 0
           vim.command('set filetype=codereviewcomment')
-          test_client.pr._active_comment = thing_under_cursor
           test_client.pr._send_comment = thing_under_cursor.reply
 
 def edit_thing_under_cursor():
@@ -192,6 +192,29 @@ def select_pull_request():
           return
      test_client.pr = line_to_pr[vim.current.window.cursor[0] - 1]
      load_pull_request()
+
+def find_file_under_cursor():
+     selected_index = vim.current.window.cursor[0]-1
+     prev = code_review.file_lines[0] if code_review.file_lines else None
+     for file_line in code_review.file_lines:
+          if file_line[0] > selected_index:
+               return prev[1]
+
+     return None
+
+def comment_on_file_under_cursor():
+     file_under_cursor = find_file_under_cursor()
+     if not file_under_cursor:
+          return
+     vim.command('sp')
+     vim.command('enew')
+     b = vim.current.buffer
+     b.options['bufhidden'] = 'delete'
+     #b.options['swapfile'] = 0
+     vim.command('set filetype=codereviewcomment')
+     def comment_on_file(text):
+          test_client.pr.comment(text, path=file_under_cursor)
+     test_client.pr._send_comment = comment_on_file
 
 EOF
 python view_dashboard()
