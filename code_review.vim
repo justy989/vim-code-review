@@ -1,9 +1,16 @@
 let g:plugin_path = expand('<sfile>:p:h')
 
-autocmd Filetype codereview,codereviewhunk syn match diffAdded "|[0-9 ]\+| +.*"
-autocmd Filetype codereview,codereviewhunk syn match diffRemoved "|[0-9 ]\+| -.*"
+autocmd Filetype codereview,codereviewhunk set syntax=c
+
+autocmd Filetype codereview,codereviewhunk syn match diffAdded "[0-9 ]\+| +.*"
+autocmd Filetype codereview,codereviewhunk syn match diffRemoved "[0-9 ]\+| -.*"
 autocmd Filetype codereviewpullrequests syn match diffAdded "(+)[^,]*"
 autocmd Filetype codereviewpullrequests syn match diffChange "(\\)[^,]*"
+autocmd Filetype codereviewpullrequests syn match diffRemoved "( )[^,]*"
+
+autocmd Filetype codereviewpullrequests syn region HeaderRegion start=+-------------------------*+ end=+\n+ nextgroup=Header
+autocmd Filetype codereviewpullrequests syn match Header +.*+ contained
+
 
 autocmd Filetype codereviewpullrequests nnoremap <silent> <buffer> <CR> :python select_pull_request()<CR>
 autocmd Filetype codereviewpullrequests nnoremap <silent> <buffer> j :python select_next_pull_request()<CR>
@@ -64,18 +71,31 @@ def open_file_selector(files):
 
      window_width = len(b[0])
 
+     cursor_location = 1
+     move_cursor = False
      for file in sorted(files):
-          selection_indicator = '>' if selected_file == file else ' '
+          if selected_file == file:
+               selection_indicator = '>'
+               move_cursor = True
+          else:
+               selection_indicator = ' '
           line = '{} {}'.format(selection_indicator, file)
           window_width = max(window_width, len(line))
-          b.append(line)
+          if len(b[0]) == 0:
+               b[0] = line
+          else:
+               b.append(line)
+          if move_cursor:
+               move_cursor = False
+               cursor_location = len(b)+1
+
+     if cursor_location > len(b):
+          cursor_location = 1
+     vim.current.window.cursor = (cursor_location, 1)
 
      vim.command('vertical resize {}'.format(window_width))
      yummy_buffer(b)
      vim.command('set filetype=codereviewsidebar')
-
-     # move the cursor to the start of the file list
-     vim.current.window.cursor = (2, 0)
 
 def select_file():
      file = vim.current.line[1:].strip()
@@ -92,12 +112,12 @@ def select_file():
      if not the_yummiest_buffer:
           return
 
-     # TODO: obvious problems
-     for index, line in enumerate(the_yummiest_buffer):
-          if selected_file in line:
-               vim.current.window.cursor = (index + 1, 1)
-               break
-     vim.command("call feedkeys ('zt')")
+     vim.command('enew')
+     code_review.reset_trackers()
+     code_review.view_file_diff(test_client.pr, selected_file, vim.current.buffer)
+     yummy_buffer(vim.current.buffer)
+     vim.command('set filetype=codereview')
+     next_hunk()
 
 def comment_on_thing_under_cursor():
      thing_under_cursor = code_review.line_to_obj.get(vim.current.window.cursor[0]-1,None)
@@ -143,8 +163,16 @@ def send_comment():
      reload_pull_request()
 
 def load_pull_request():
+     global selected_file
      vim.command('enew')
-     code_review.get_file_lines(test_client.pr, vim.current.buffer)
+     files = test_client.pr.diff.keys()
+     if not files:
+          return
+
+     code_review.reset_trackers()
+     selected_file = files[0]
+     code_review.view_file_diff(test_client.pr, selected_file, vim.current.buffer)
+     #code_review.view_file_diffs(test_client.pr, vim.current.buffer)
      vim.current.buffer.name = test_client.pr.title
      yummy_buffer(vim.current.buffer)
      vim.command('set filetype=codereview')
@@ -172,14 +200,14 @@ def pull_request_format(pr):
      lines.append('')
 
      review_status_dct = {
-          'APPROVED'   : '(+) ',
-          'NEEDS_WORK' : '(\) ',
-          'UNAPPROVED' : '',
+          'APPROVED'   : '(+)',
+          'NEEDS_WORK' : '(\)',
+          'UNAPPROVED' : '( )',
      }
 
      reviewer_line = ''
      for reviewer in pr.reviewers.values():
-          reviewer_line += '{}{}, '.format(review_status_dct[reviewer.status], reviewer.user.display_name)
+          reviewer_line += '{} {}, '.format(review_status_dct[reviewer.status], reviewer.user.display_name)
      lines.append(reviewer_line.rstrip(', '))
      lines.append(code_review.bar)
      return lines
@@ -208,6 +236,7 @@ def select_pull_request():
           return
      test_client.pr = line_to_pr[vim.current.window.cursor[0] - 1]
      load_pull_request()
+     next_hunk()
 
 def find_file_under_cursor():
      selected_index = vim.current.window.cursor[0]-1
@@ -268,4 +297,5 @@ def next_hunk():
      vim.command("call feedkeys ('zz')")
 
 EOF
-python view_dashboard()
+
+command Dashboard :python view_dashboard()
