@@ -3,8 +3,10 @@ let g:plugin_path = expand('<sfile>:p:h')
 autocmd Filetype codereview syn match diffAdded "|[0-9 ]\+| +.*"
 autocmd Filetype codereview syn match diffRemoved "|[0-9 ]\+| -.*"
 
+autocmd Filetype codereviewcomment nnoremap <silent> <buffer> <CR> :python send_comment()<CR>
 autocmd Filetype codereviewsidebar nnoremap <silent> <buffer> <CR> :python select_file()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> s :python open_file_selector(test_client.pr.diff.keys())<CR>
+autocmd Filetype codereview nnoremap <silent> <buffer> <S-C> :python comment_on_thing_under_cursor()<CR>
 
 python << EOF
 import vim
@@ -79,10 +81,32 @@ def select_file():
                break
      vim.command("call feedkeys ('zt')")
 
-vim.command('enew')
-code_review.get_file_lines(test_client.pr, vim.current.buffer)
-vim.current.buffer.name = test_client.pr.title
-yummy_buffer(vim.current.buffer)
-vim.command('set filetype=codereview')
+def comment_on_thing_under_cursor():
+     thing_under_cursor = test_client.pr.line_to_obj.get(vim.current.window.cursor[0]-1,None)
+     if not thing_under_cursor:
+          return
+     if hasattr(thing_under_cursor, 'reply'):
+          vim.command('sp')
+          vim.command('enew')
+          b = vim.current.buffer
+          b.options['bufhidden'] = 'delete'
+          #b.options['swapfile'] = 0
+          vim.command('set filetype=codereviewcomment')
+          test_client.pr._active_comment = thing_under_cursor
+
+def send_comment():
+     b = vim.current.buffer
+     comment_text = '\n'.join(b)
+     test_client.pr._active_comment.reply(comment_text)
+     vim.command('close!')
+     load_pull_request()
+
+def load_pull_request():
+     vim.command('enew')
+     code_review.get_file_lines(test_client.pr, vim.current.buffer)
+     vim.current.buffer.name = test_client.pr.title
+     yummy_buffer(vim.current.buffer)
+     vim.command('set filetype=codereview')
 
 EOF
+python load_pull_request()
