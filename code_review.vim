@@ -7,6 +7,8 @@ autocmd Filetype codereviewcomment nnoremap <silent> <buffer> <CR> :python send_
 autocmd Filetype codereviewsidebar nnoremap <silent> <buffer> <CR> :python select_file()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> s :python open_file_selector(test_client.pr.diff.keys())<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> <S-C> :python comment_on_thing_under_cursor()<CR>
+autocmd Filetype codereview nnoremap <silent> <buffer> <S-E> :python edit_thing_under_cursor()<CR>
+autocmd Filetype codereview nnoremap <silent> <buffer> <S-D> :python delete_thing_under_cursor()<CR>
 
 python << EOF
 import vim
@@ -38,11 +40,9 @@ def open_file_selector(files):
      global selected_file
 
      vim.command('vnew')
-     vim.command('set syntax=python') # hack
 
      b = vim.current.buffer
      b.name = 'File Selector'
-     b[0] = '# Select a file to view:'
 
      window_width = len(b[0])
 
@@ -93,11 +93,38 @@ def comment_on_thing_under_cursor():
           #b.options['swapfile'] = 0
           vim.command('set filetype=codereviewcomment')
           test_client.pr._active_comment = thing_under_cursor
+          test_client.pr._send_comment = thing_under_cursor.reply
+
+def edit_thing_under_cursor():
+     thing_under_cursor = test_client.pr.line_to_obj.get(vim.current.window.cursor[0]-1,None)
+     if not thing_under_cursor:
+          return
+     if hasattr(thing_under_cursor, 'edit'):
+          vim.command('sp')
+          vim.command('enew')
+          b = vim.current.buffer
+          b.options['bufhidden'] = 'delete'
+          vim.command('set filetype=codereviewcomment')
+          lines = thing_under_cursor.text.split('\n')
+          b[0] = lines[0]
+          if len(lines) > 1:
+               for line in lines[1:]:
+                    b.append(line)
+          test_client.pr._active_comment = thing_under_cursor
+          test_client.pr._send_comment = thing_under_cursor.edit
+
+def delete_thing_under_cursor():
+     thing_under_cursor = test_client.pr.line_to_obj.get(vim.current.window.cursor[0]-1,None)
+     if not thing_under_cursor:
+          return
+     if hasattr(thing_under_cursor, 'delete'):
+          thing_under_cursor.delete()
+          load_pull_request()
 
 def send_comment():
      b = vim.current.buffer
      comment_text = '\n'.join(b)
-     test_client.pr._active_comment.reply(comment_text)
+     test_client.pr._send_comment(comment_text)
      vim.command('close!')
      load_pull_request()
 
