@@ -1,0 +1,174 @@
+/path/to/block_utils.cpp |----------------------------------------------------------------------------------------------------------------------------------------------------------
+/path/to/main.cpp        | /path/to/block_utils.cpp
+                         |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^--------------------------------^---------------------------------------------------------------------
+                         |    |0381| 
+                         |    |0382|           {lblue}Pixel_t{nc} block_pixel_check = block_pos.pixel + {lblue}Pixel_t{nc}{{magenta}HALF_TILE_SIZE_IN_PIXELS{nc}, {magenta}HALF_TILE_SIZE_IN_PIXELS{nc}};
+                         |    |0383| 
+                         |  +3|0384|{red}-          // if the block is moving, to the right or up, then check the pixel adjacent to the center in the direction we are moving{nc}
+                         |    |-----------------------------------------------------------------------------------------------------------------------------------------------------
+                         |    | Justin 'The Best' Tardiff                                                                                                                          |
+                         |    |-----------------------------------------------------------------------------------------------------------------------------------------------------
+                         |    |  Glad you got rid of this, it was a hack to begin with.                                                                                            |
+                         |    |-|---------------------------------------------------------------------------------------------------------------------------------------------------
+                         |      | Roberto 'The Okest' Mcshane                                                                                                                      |
+                         |      |---------------------------------------------------------------------------------------------------------------------------------------------------
+                         |      |  Ya, I agree, also this is very valuable comment feedback                                                                          | 52 dislikes |
+                         |      |-|-------------------------------------------------------------------------------------------------------------------------------------------------
+                         |        | David 'The Trollest' Tyler                                                                                                                     |
+                         |        |-------------------------------------------------------------------------------------------------------------------------------------------------
+                         |        |  You should have written this in erlang in the first place, this would have never happened                                                     |
+                         |        |-------------------------------------------------------------------------------------------------------------------------------------------------
+                         |    |0385|{red}-          // this will have to change in the future anyway once blocks are no longer square{nc}
+                         |    |0386|{red}-          if(block->horizontal_move.state > MOVE_STATE_IDLING &&{nc}
+                         |    |0387|{red}-             block->horizontal_move.sign == MOVE_SIGN_POSITIVE){{nc}
+                         |    |0388|{red}-               block_pixel_check.x++;{nc}
+                         |    |0389|{red}-          }{nc}
+                         |    |0390|{red}-{nc}
+                         |    |0391|{red}-          if(block->vertical_move.state > MOVE_STATE_IDLING &&{nc}
+                         |    |0392|{red}-             block->vertical_move.sign == MOVE_SIGN_POSITIVE){{nc}
+                         |    |0393|{red}-               block_pixel_check.y++;{nc}
+                         |    |0394|{red}-          }{nc}
+                         |    |0395|{red}-{nc}
+                         |    |0396|           {lblue}Coord_t{nc} coord = pixel_to_coord(block_pixel_check);
+                         |    |0397|           {lblue}Interactive_t{nc}* interactive = quad_tree_interactive_find_at(interactive_quad_tree, coord);
+                         |    |0398|           {blue}if{nc}(interactive){
+                         |----------------------------------------------------------------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         | /path/to/main.cpp
+                         |---------------------------------------------------------------------------------------------------------------------------------------------------------
+                         |    |0000|{green} /*{nc}
+                         |    |0001|{green} http://www.simonstalenhag.se/{nc}
+                         |    |0002|{green} -Grant Sanderson 3blue1brown{nc}
+                         |    |0003|{green} -Shane Hendrixson{nc}
+                         |    |0004|{green} {nc}
+                         |    |0005|{green} TODO:{nc}
+                         |    |0007|{green} Entanglement:{nc}
+                         |    |0008|{green} - entangle puzzle where there is a line of pressure plates against the wall with a line of popups on the other side that would{nc}
+                         |    |0009|{green}   trap an entangled block if it got to close, stopping the player from using walls to get blocks closer{nc}
+                         |    |0010|{green} - entangle puzzle with an extra non-entangled block where you don't want one of the entangled blocks to move, and you use{nc}
+                         |    |0011|{green}   the non-entangled block to accomplish that{nc}
+                         |    |0012|{green} - arrow entanglement{nc}
+                         |    |0013|{green}  arrow kills player{nc}
+                         |    |0014|{green}  {nc}
+                         |    |0015|{green} Big Features:{nc}
+                         |    |0016|{green} - Block splitting{nc}
+                         |    |0017|{red}-- Block ice collision with masses{nc}
+                         |    |0017|{green}+- Bring block ice collision to the masses{nc}
+                         |    |0018|{green}  - 3D{nc}
+                         |    |0019|{green}  {nc}
+                         |    |0020|{green}  TODO:{nc}
+                         |    |0021|{green}  - collision infinite loop lol{nc}
+                         |    |0022|{red}-- do we have a walk stuttering problem on other machines ?{nc}
+                         |    |0023|{green}+- do we have a walk stuttering problem on other machines ? Doesn't look like it lol.{nc}
+                         |    |0024|{green}  {nc}
+                         |    |0025|{green}  NOTES:{nc}
+                         |    |0026|{green}  - Only 2 blocks high can go through portals{nc}
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |1268| 
+                         |    |1269|                     {blue}for{nc}({lblue}int{nc} d = {magenta}0{nc}; d < {magenta}4{nc}; d++){
+                         |    |1270|                          {blue}if{nc}(player_action.move[d]){
+                         |    |1271|{red}-                              Direction_t rot_dir = direction_rotate_clockwise((Direction_t)(d), player->rotation);{nc}
+                         |    |1271|{green}+                              Direction_t rot_dir = direction_rotate_clockwise((Direction_t)(d), player->move_rotation[d]);{nc}
+                         |    |1272|                               rotated_move_actions[rot_dir] = true;
+                         |    |1273|                               {blue}if{nc}(player->reface) player->face = {blue}static_cast{nc}<{lblue}Direction_t{nc}>(rot_dir);
+                         |    |1274|                          }
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |1504|                     block->pos_delta.y = calc_position_motion(block->vel.y, block->accel.y, dt);
+                         |    |1505|                     block->vel.y = calc_velocity_motion(block->vel.y, block->accel.y, dt);
+                         |    |1506| 
+                         |    |1507|{green}+                    Position_t block_center = block->pos + block->pos_delta;{nc}
+                         |    |1508|{green}+                    block_center.pixel += HALF_TILE_SIZE_PIXEL;{nc}
+                         |    |1509|{green}+{nc}
+                         |    |1510|{green}+                    Position_t premove_block_center = block->pos;{nc}
+                         |    |1511|{green}+                    premove_block_center.pixel += HALF_TILE_SIZE_PIXEL;{nc}
+                         |    |1512|{green}+{nc}
+                         |    |1513|                     {lblue}bool{nc} coast_horizontal = false;
+                         |    |1514|                     {lblue}bool{nc} coast_vertical = false;
+                         |    |1515| 
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |1774|                          coord = pixel_to_coord(final_pos.pixel + {magenta}HALF_TILE_SIZE_PIXEL{nc});
+                         |    |1775|                          {lblue}Coord_t{nc} premove_coord = pixel_to_coord(block->pos.pixel + {magenta}HALF_TILE_SIZE_PIXEL{nc});
+                         |    |1776| 
+                         |  -3|1777|{red}-                         Position_t block_center = block->pos + block->pos_delta;{nc}
+                         |    |----------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    | Justin 'The Best' Tardiff                                                                                                                          |
+                         |    |----------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    |  This should have not been deleted, we need to bring it back bro                                                                         | 3 likes |
+                         |    |-|--------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |      | Roberto 'The Okest' Mcshane                                                                                                                      |
+                         |      |--------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |      |  Are you sure ?                                                                                                                        | 1 like  |
+                         |    |-|--------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    | Justin 'The Best' Tardiff                                                                                                                          |
+                         |    |----------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    |  Actually, nevermind, it just has to combined with the code up top                                                                                 |
+                         |    |----------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    |1777|{red}-                         block_center.pixel += HALF_TILE_SIZE_PIXEL;{nc}
+                         |    |1778|{red}-{nc}
+                         |    |1779|{red}-                         auto teleport_result = teleport_position_across_portal(block_center, Vec_t{}, &world, premove_coord,{nc}
+                         |    |1780|{green}+                         auto teleport_result = teleport_position_across_portal(block_center, block->pos_delta, &world, premove_coord,{nc}
+                         |    |1781|                                                                                 coord);
+                         |    |1782|                          {blue}if{nc}(teleport_result.count > block->clone_id){
+                         |    |1783|                               block->pos = teleport_result.results[block->clone_id].pos;
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |1785| 
+                         |    |1786|                               block->vel = vec_rotate_quadrants_clockwise(block->vel, teleport_result.results[block->clone_id].rotations);
+                         |    |1787|                               block->accel = vec_rotate_quadrants_clockwise(block->accel, teleport_result.results[block->clone_id].rotations);
+                         |    |1788|{green}+                              block->pos_delta = vec_rotate_quadrants_clockwise(block->pos_delta, teleport_result.results[block->clone_id].rotations);{nc}
+                         |    |1789|                               block->rotation = teleport_result.results[block->clone_id].rotations;
+                         |    |1790| 
+                         |    |1791|                               {blue}if{nc}(check_block_collision_with_other_blocks(block, &world)){
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |1797|                               block_center = block_get_center(block);
+                         |    |1798| 
+                         |    |1799| 
+                         |    |1800|{red}-                              auto collided_teleport_result = teleport_position_across_portal(block_center, Vec_t{}, &world,{nc}
+                         |    |1800|{green}+                              auto collided_teleport_result = teleport_position_across_portal(block_center, block->pos_delta, &world,{nc}
+                         |    |1801|                                                                                               premove_coord, coord);
+                         |    |1802|                               {blue}if{nc}(collided_teleport_result.count > block->clone_id){
+                         |    |1803|                                    block->pos = collided_teleport_result.results[block->clone_id].pos;
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |1805| 
+                         |    |1806|                                    block->vel = vec_rotate_quadrants_clockwise(block->vel, collided_teleport_result.results[block->clone_id].rotations);
+                         |    |1807|                                    block->accel = vec_rotate_quadrants_clockwise(block->accel, collided_teleport_result.results[block->clone_id].rotations);
+                         |    |1808|{green}+                                   block->pos_delta = vec_rotate_quadrants_clockwise(block->pos_delta, teleport_result.results[block->clone_id].rotations);{nc}
+                         |    |1809|                                    block->rotation = collided_teleport_result.results[block->clone_id].rotations;
+                         |    |1810|                               }
+                         |    |1811|                          }
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |2657|                draw_text(buffer, text_pos);
+                         |    |2658| 
+                         |    |2659|                {lblue}Player_t{nc}* player = world.players.elements;
+                         |    |2660|{red}-               snprintf(buffer, 64, "P: %d,%d", player->pos.pixel.x, player->pos.pixel.y);{nc}
+                         |    |2660|{green}+               snprintf(buffer, 64, "P: %d,%d R: %d", player->pos.pixel.x, player->pos.pixel.y, player->rotation);{nc}
+                         |    |2661|                text_pos.y -= {magenta}0.045f{nc};
+                         |    |2662| 
+                         |    |2663|                glColor3f({magenta}0.0f{nc}, {magenta}0.0f{nc}, {magenta}0.0f{nc});
+                         |    |-----^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+                         |    |2722|           }
+                         |    |2723| #endif
+                         |    |2724| 
+                         |    |2725|{green}+          for(S16 i = 0; i < world.blocks.count; i++){{nc}
+                         |    |2726|{green}+               auto* block = world.blocks.elements + i;{nc}
+                         |    |2727|{green}+               Vec_t screen_pos = pos_to_vec(block->pos);{nc}
+                         |    |2728|{green}+{nc}
+                         |    |2729|{green}+               Quad_t block_outline_quad = {screen_pos.x, screen_pos.y, screen_pos.x + TILE_SIZE, screen_pos.y + TILE_SIZE};{nc}
+                         |    |2730|{green}+{nc}
+                         |    |2731|{green}+               if(block_on_ice(block, &world.tilemap, world.interactive_qt)){{nc}
+                         |  -1|2732|{green}+                    draw_quad_wireframe(&block_outline_quad, 0.0f, 0.0f, 255.0f);{nc}
+                         |    |----------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    | Ryan 'Probably the Actual Best' Abouzahra                                                                                                          |
+                         |    |----------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    |  Should we create a mechanism for showing different debug drawing modes ? I have a design in mind, do you have some time this week to     ---------|
+                         |    |  talk about it? Tuesday is the best day for me.                                                                                           | 1 like |
+                         |    |----------------------------------------------------------------------------------------------------------------------------------------------------|
+                         |    |2733|{green}+               }else{{nc}
+                         |    |2734|{green}+                    draw_quad_wireframe(&block_outline_quad, 255.0f, 255.0f, 255.0f);{nc}
+                         |    |2735|{green}+               }{nc}
+                         |    |2736|{green}+          }{nc}
+                         |    |2737|{green}+{nc}
+                         |    |2738|{green}+{nc}
+                         |    |2739|           {blue}if{nc}(demo.mode == {magenta}DEMO_MODE_PLAY{nc}){
+                         |    |2740|                {lblue}F32{nc} demo_pct = ({lblue}F32{nc})(frame_count) / ({lblue}F32{nc})(demo.last_frame);
+                         |    |2741|                {lblue}Quad_t{nc} pct_bar_quad = {pct_bar_outline_quad.left, pct_bar_outline_quad.bottom, demo_pct, pct_bar_outline_quad.top};
+                         |    |-----------------------------------------------------------------------------------------------vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv------
+
