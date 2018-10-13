@@ -6,6 +6,8 @@ autocmd Filetype codereviewpullrequests syn match diffAdded "(+)[^,]*"
 autocmd Filetype codereviewpullrequests syn match diffChange "(\\)[^,]*"
 
 autocmd Filetype codereviewpullrequests nnoremap <silent> <buffer> <CR> :python select_pull_request()<CR>
+autocmd Filetype codereviewpullrequests nnoremap <silent> <buffer> j :python select_next_pull_request()<CR>
+autocmd Filetype codereviewpullrequests nnoremap <silent> <buffer> k :python select_prev_pull_request()<CR>
 autocmd Filetype codereviewcomment nnoremap <silent> <buffer> <CR> :python send_comment()<CR>
 autocmd Filetype codereviewsidebar nnoremap <silent> <buffer> <CR> :python select_file()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> s :python open_file_selector(test_client.pr.diff.keys())<CR>
@@ -14,11 +16,14 @@ autocmd Filetype codereview nnoremap <silent> <buffer> <S-E> :python edit_thing_
 autocmd Filetype codereview nnoremap <silent> <buffer> <S-D> :python delete_thing_under_cursor()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> <S-V> :python view_dashboard()<CR>
 autocmd Filetype codereview nnoremap <silent> <buffer> <S-M> :python comment_on_file_under_cursor()<CR>
+autocmd Filetype codereview nnoremap <silent> <buffer> j :python next_hunk()<CR>
+autocmd Filetype codereview nnoremap <silent> <buffer> k :python prev_hunk()<CR>
 
 python << EOF
 import vim
 import os
 import textwrap
+import bisect
 
 # Get the Vim variable to Python
 plugin_path = vim.eval("g:plugin_path")
@@ -225,6 +230,36 @@ def comment_on_file_under_cursor():
      def comment_on_file(text):
           test_client.pr.comment(text, path=file_under_cursor)
      open_comment_buffer(comment_on_file)
+
+def select_prev_pull_request():
+     for i in range(vim.current.window.cursor[0] - 3, -1, -1):
+          line = vim.current.buffer[i]
+          if line == code_review.bar:
+               vim.current.window.cursor = (i + 2, 1)
+               break;
+     vim.command("call feedkeys ('zz')")
+
+def select_next_pull_request():
+     for i in range(vim.current.window.cursor[0], len(vim.current.buffer) - 2):
+          line = vim.current.buffer[i]
+          if line == code_review.bar:
+               vim.current.window.cursor = (i + 2, 1)
+               break;
+     vim.command("call feedkeys ('zz')")
+
+def prev_hunk():
+     new_index = bisect.bisect_left(code_review.hunk_lines, vim.current.window.cursor[0] - 2)
+     if new_index <= 0:
+          return
+     vim.current.window.cursor = (code_review.hunk_lines[new_index - 1] + 2, 1)
+     vim.command("call feedkeys ('zz')")
+
+def next_hunk():
+     new_index = bisect.bisect_right(code_review.hunk_lines, vim.current.window.cursor[0] - 1)
+     if new_index >= len(code_review.hunk_lines):
+          return
+     vim.current.window.cursor = (code_review.hunk_lines[new_index] + 2, 1)
+     vim.command("call feedkeys ('zz')")
 
 EOF
 python view_dashboard()

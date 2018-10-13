@@ -5,6 +5,7 @@ bar = '-' * 100
 
 line_to_obj = {}
 file_lines = []
+hunk_lines = []
 
 def append_line(appendable, line, obj):
     global line_to_obj
@@ -24,8 +25,10 @@ def print_comment(comment, appendable, indent=0):
 def get_file_lines(pr, appendable):
     global line_to_obj
     global file_lines
+    global hunk_lines
     line_to_obj = {}
     file_lines = []
+    hunk_lines = []
     appendable[0] = bar
     for filename in sorted(pr.diff.keys()):
         diff = pr.diff[filename]
@@ -44,6 +47,7 @@ def get_file_lines(pr, appendable):
         lines_with_comments = sorted(line_comments.keys())
         comment_index = 0
         for hunk in diff.hunks:
+            hunk_lines.append(len(appendable)-1)
             for segment in hunk.segments:
                 for line in segment.lines:
                     if comment_index < len(lines_with_comments) and lines_with_comments[comment_index] < line.destination:
