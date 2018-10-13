@@ -122,14 +122,14 @@ def delete_thing_under_cursor():
           return
      if hasattr(thing_under_cursor, 'delete'):
           thing_under_cursor.delete()
-          load_pull_request()
+          reload_pull_request()
 
 def send_comment():
      b = vim.current.buffer
      comment_text = '\n'.join(b)
      test_client.pr._send_comment(comment_text)
      vim.command('close!')
-     load_pull_request()
+     reload_pull_request()
 
 def load_pull_request():
      vim.command('enew')
@@ -137,6 +137,14 @@ def load_pull_request():
      vim.current.buffer.name = test_client.pr.title
      yummy_buffer(vim.current.buffer)
      vim.command('set filetype=codereview')
+
+def reload_pull_request():
+     saved_cursor = vim.current.window.cursor
+     load_pull_request()
+     try:
+          vim.current.window.cursor = saved_cursor
+     except:
+          pass
 
 def pull_request_format(pr):
      lines = []
@@ -192,12 +200,13 @@ def select_pull_request():
 
 def find_file_under_cursor():
      selected_index = vim.current.window.cursor[0]-1
-     prev = code_review.file_lines[0] if code_review.file_lines else None
+     prev_file = code_review.file_lines[0][1] if code_review.file_lines else None
      for file_line in code_review.file_lines:
           if file_line[0] > selected_index:
-               return prev[1]
+               return prev_file
+          prev_file = file_line[1]
 
-     return None
+     return prev_file
 
 def open_comment_buffer(send_comment):
      vim.command('sp')
